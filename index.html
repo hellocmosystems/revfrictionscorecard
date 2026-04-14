@@ -190,13 +190,22 @@
     </div>
   </div>
 
-  <!-- HubSpot Gate -->
+  <!-- Gate Screen -->
   <div id="screen-gate" class="screen">
     <div class="gate-card">
       <div class="gate-title">Your results are ready.</div>
       <p class="gate-sub">Enter your name and email to see your personalized Revenue Friction Report — including a breakdown across all three pillars and exactly where to focus first.</p>
-      <div id="hs-form-container"></div>
-      <p class="gate-privacy">Your information is kept private and will never be sold. CMO Systems may follow up with relevant insights based on your results.</p>
+      <div id="custom-gate-form">
+        <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+          <input type="text" id="gate-firstname" placeholder="First name" style="flex:1;min-width:140px;">
+          <input type="text" id="gate-lastname" placeholder="Last name" style="flex:1;min-width:140px;">
+        </div>
+        <input type="email" id="gate-email" placeholder="Email address" style="width:100%;margin-bottom:16px;">
+        <div id="gate-error" style="color:#A32D2D;font-size:13px;margin-bottom:10px;display:none;">Please enter a valid email address.</div>
+        <button class="btn-primary" id="gate-submit" onclick="submitGate()">See my results</button>
+      </div>
+      <div id="gate-submitting" style="display:none;text-align:center;padding:1rem 0;font-size:14px;color:var(--steel);">Sending your results...</div>
+      <p class="gate-privacy" style="margin-top:1rem;">Your information is kept private and will never be sold. CMO Systems may follow up with relevant insights based on your results.</p>
     </div>
   </div>
 
@@ -356,87 +365,61 @@ function getTier(total) {
   return 'Revenue at Risk';
 }
 
-function setFieldValue(name, value) {
-  const selectors = [
-    `input[name="${name}"]`,
-    `textarea[name="${name}"]`,
-    `select[name="${name}"]`
-  ];
-  selectors.forEach(sel => {
-    document.querySelectorAll(sel).forEach(el => {
-      el.value = value;
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    });
-  });
-}
-
-function populateAllFields() {
-  setFieldValue('friction_score', String(scores.total));
-  setFieldValue('friction_tier', getTier(scores.total));
-  setFieldValue('people_score', String(scores.people));
-  setFieldValue('process_score', String(scores.process));
-  setFieldValue('performance_score', String(scores.performance));
-}
-
-function createHubSpotForm() {
-  const container = document.getElementById('hs-form-container');
-  if (!container) return;
-  container.innerHTML = '';
-
-  window.hbspt.forms.create({
-    region: 'na2',
-    portalId: '245854612',
-    formId: 'ed112fb4-4e03-457f-ae39-5871122cf7d4',
-    target: '#hs-form-container',
-    onFormReady: function() {
-      populateAllFields();
-      let count = 0;
-      const interval = setInterval(() => {
-        populateAllFields();
-        count++;
-        if (count >= 10) clearInterval(interval);
-      }, 300);
-    },
-    onFormSubmit: function() {
-      populateAllFields();
-    },
-    onFormSubmitted: function() {
-      setTimeout(() => showResults(), 800);
-    }
-  });
-}
-
-function loadHubSpotForm() {
-  if (window.hbspt && window.hbspt.forms) {
-    createHubSpotForm();
-    return;
-  }
-
-  // Dynamically load the HubSpot script then create form
-  const script = document.createElement('script');
-  script.src = 'https://js-na2.hsforms.net/forms/embed/245854612.js';
-  script.onload = function() {
-    const waitForHbspt = (attempts) => {
-      if (window.hbspt && window.hbspt.forms) {
-        createHubSpotForm();
-      } else if (attempts > 0) {
-        setTimeout(() => waitForHbspt(attempts - 1), 200);
-      }
-    };
-    waitForHbspt(25);
-  };
-  document.head.appendChild(script);
-}
-
 function showGate() {
   scores.people = answers.slice(0, 8).reduce((a, b) => a + b, 0);
   scores.process = answers.slice(8, 16).reduce((a, b) => a + b, 0);
   scores.performance = answers.slice(16, 24).reduce((a, b) => a + b, 0);
   scores.total = scores.people + scores.process + scores.performance;
-
   show('screen-gate');
-  loadHubSpotForm();
+}
+
+function submitGate() {
+  const firstname = document.getElementById('gate-firstname').value.trim();
+  const lastname = document.getElementById('gate-lastname').value.trim();
+  const email = document.getElementById('gate-email').value.trim();
+  const errorEl = document.getElementById('gate-error');
+
+  if (!email || !email.includes('@')) {
+    errorEl.style.display = 'block';
+    return;
+  }
+  errorEl.style.display = 'none';
+
+  document.getElementById('custom-gate-form').style.display = 'none';
+  document.getElementById('gate-submitting').style.display = 'block';
+
+  const portalId = '245854612';
+  const formId = 'ed112fb4-4e03-457f-ae39-5871122cf7d4';
+  const url = `https://api.hsforms.com/submissions/v3/integration/submit/${portalId}/${formId}`;
+
+  const payload = {
+    fields: [
+      { name: 'firstname', value: firstname },
+      { name: 'lastname', value: lastname },
+      { name: 'email', value: email },
+      { name: 'friction_score', value: String(scores.total) },
+      { name: 'friction_tier', value: getTier(scores.total) },
+      { name: 'people_score', value: String(scores.people) },
+      { name: 'process_score', value: String(scores.process) },
+      { name: 'performance_score', value: String(scores.performance) }
+    ],
+    context: {
+      pageUri: window.location.href,
+      pageName: 'Revenue Friction Scorecard'
+    }
+  };
+
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(res => {
+    showResults();
+  })
+  .catch(err => {
+    showResults();
+  });
 }
 
 function showResults() {
