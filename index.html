@@ -6,7 +6,7 @@
 <title>Revenue Friction Scorecard — CMO Systems</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700&family=League+Gothic&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-<script src="https://js-na2.hsforms.net/forms/embed/245854612.js" defer></script>
+<script src="https://js-na2.hsforms.net/forms/embed/245854612.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -195,7 +195,7 @@
     <div class="gate-card">
       <div class="gate-title">Your results are ready.</div>
       <p class="gate-sub">Enter your name and email to see your personalized Revenue Friction Report — including a breakdown across all three pillars and exactly where to focus first.</p>
-      <div class="hs-form-frame" data-region="na2" data-form-id="ed112fb4-4e03-457f-ae39-5871122cf7d4" data-portal-id="245854612"></div>
+      <div id="hs-form-container"></div>
       <p class="gate-privacy">Your information is kept private and will never be sold. CMO Systems may follow up with relevant insights based on your results.</p>
     </div>
   </div>
@@ -356,41 +356,63 @@ function getTier(total) {
   return 'Revenue at Risk';
 }
 
-function populateHubSpotHiddenFields() {
-  const tryPopulate = (attempts) => {
-    const frame = document.querySelector('.hs-form-frame');
-    if (!frame) return;
-    const iframe = frame.querySelector('iframe');
-    const formEl = frame.querySelector('form') || document.querySelector('form.hs-form');
-
-    // Try to set values on any visible or hidden inputs within the form context
-    const fieldMap = {
-      'friction_score': String(scores.total),
-      'friction_tier': getTier(scores.total),
-      'people_score': String(scores.people),
-      'process_score': String(scores.process),
-      'performance_score': String(scores.performance)
-    };
-
-    let found = 0;
-    Object.entries(fieldMap).forEach(([name, value]) => {
-      const inputs = document.querySelectorAll(`input[name="${name}"]`);
-      inputs.forEach(input => {
-        input.value = value;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-        found++;
-      });
+function setFieldValue(name, value) {
+  const selectors = [
+    `input[name="${name}"]`,
+    `textarea[name="${name}"]`,
+    `select[name="${name}"]`
+  ];
+  selectors.forEach(sel => {
+    document.querySelectorAll(sel).forEach(el => {
+      el.value = value;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
     });
+  });
+}
 
-    // If fields not found yet and we have attempts left, retry
-    if (found === 0 && attempts > 0) {
-      setTimeout(() => tryPopulate(attempts - 1), 500);
+function populateAllFields() {
+  setFieldValue('friction_score', String(scores.total));
+  setFieldValue('friction_tier', getTier(scores.total));
+  setFieldValue('people_score', String(scores.people));
+  setFieldValue('process_score', String(scores.process));
+  setFieldValue('performance_score', String(scores.performance));
+}
+
+function loadHubSpotForm() {
+  const container = document.getElementById('hs-form-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const waitForHbspt = (attempts) => {
+    if (window.hbspt && window.hbspt.forms) {
+      window.hbspt.forms.create({
+        region: 'na2',
+        portalId: '245854612',
+        formId: 'ed112fb4-4e03-457f-ae39-5871122cf7d4',
+        target: '#hs-form-container',
+        onFormReady: function(form) {
+          populateAllFields();
+          // Re-populate every 300ms for 3 seconds to catch any re-renders
+          let count = 0;
+          const interval = setInterval(() => {
+            populateAllFields();
+            count++;
+            if (count >= 10) clearInterval(interval);
+          }, 300);
+        },
+        onFormSubmit: function(form) {
+          populateAllFields();
+        },
+        onFormSubmitted: function() {
+          setTimeout(() => showResults(), 800);
+        }
+      });
+    } else if (attempts > 0) {
+      setTimeout(() => waitForHbspt(attempts - 1), 300);
     }
   };
-
-  // Start trying after a short delay to allow HubSpot form to render
-  setTimeout(() => tryPopulate(10), 800);
+  waitForHbspt(20);
 }
 
 function showGate() {
@@ -400,21 +422,7 @@ function showGate() {
   scores.total = scores.people + scores.process + scores.performance;
 
   show('screen-gate');
-
-  // Populate hidden fields once form renders
-  populateHubSpotHiddenFields();
-
-  // Also populate on HubSpot form ready event
-  window.addEventListener('message', function(event) {
-    if (event.data && event.data.type === 'hsFormCallback') {
-      if (event.data.eventName === 'onFormReady') {
-        populateHubSpotHiddenFields();
-      }
-      if (event.data.eventName === 'onFormSubmitted') {
-        setTimeout(() => showResults(), 800);
-      }
-    }
-  });
+  loadHubSpotForm();
 }
 
 function showResults() {
