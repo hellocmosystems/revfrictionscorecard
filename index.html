@@ -349,6 +349,50 @@ function prevQ() {
   if (current > 0) { current--; renderQ(); }
 }
 
+function getTier(total) {
+  if (total >= 96) return 'Optimized';
+  if (total >= 72) return 'Friction Present';
+  if (total >= 48) return 'High Friction';
+  return 'Revenue at Risk';
+}
+
+function populateHubSpotHiddenFields() {
+  const tryPopulate = (attempts) => {
+    const frame = document.querySelector('.hs-form-frame');
+    if (!frame) return;
+    const iframe = frame.querySelector('iframe');
+    const formEl = frame.querySelector('form') || document.querySelector('form.hs-form');
+
+    // Try to set values on any visible or hidden inputs within the form context
+    const fieldMap = {
+      'friction_score': String(scores.total),
+      'friction_tier': getTier(scores.total),
+      'people_score': String(scores.people),
+      'process_score': String(scores.process),
+      'performance_score': String(scores.performance)
+    };
+
+    let found = 0;
+    Object.entries(fieldMap).forEach(([name, value]) => {
+      const inputs = document.querySelectorAll(`input[name="${name}"]`);
+      inputs.forEach(input => {
+        input.value = value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        found++;
+      });
+    });
+
+    // If fields not found yet and we have attempts left, retry
+    if (found === 0 && attempts > 0) {
+      setTimeout(() => tryPopulate(attempts - 1), 500);
+    }
+  };
+
+  // Start trying after a short delay to allow HubSpot form to render
+  setTimeout(() => tryPopulate(10), 800);
+}
+
 function showGate() {
   scores.people = answers.slice(0, 8).reduce((a, b) => a + b, 0);
   scores.process = answers.slice(8, 16).reduce((a, b) => a + b, 0);
@@ -357,10 +401,18 @@ function showGate() {
 
   show('screen-gate');
 
-  // Watch for HubSpot form submission then reveal results
+  // Populate hidden fields once form renders
+  populateHubSpotHiddenFields();
+
+  // Also populate on HubSpot form ready event
   window.addEventListener('message', function(event) {
-    if (event.data && event.data.type === 'hsFormCallback' && event.data.eventName === 'onFormSubmitted') {
-      setTimeout(() => showResults(), 800);
+    if (event.data && event.data.type === 'hsFormCallback') {
+      if (event.data.eventName === 'onFormReady') {
+        populateHubSpotHiddenFields();
+      }
+      if (event.data.eventName === 'onFormSubmitted') {
+        setTimeout(() => showResults(), 800);
+      }
     }
   });
 }
