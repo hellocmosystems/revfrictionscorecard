@@ -6,7 +6,7 @@
 <title>Revenue Friction Scorecard — CMO Systems</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700&family=League+Gothic&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-<script src="https://js-na2.hsforms.net/forms/embed/245854612.js"></script>
+
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -379,40 +379,54 @@ function populateAllFields() {
   setFieldValue('performance_score', String(scores.performance));
 }
 
-function loadHubSpotForm() {
+function createHubSpotForm() {
   const container = document.getElementById('hs-form-container');
   if (!container) return;
   container.innerHTML = '';
 
-  const waitForHbspt = (attempts) => {
-    if (window.hbspt && window.hbspt.forms) {
-      window.hbspt.forms.create({
-        region: 'na2',
-        portalId: '245854612',
-        formId: 'ed112fb4-4e03-457f-ae39-5871122cf7d4',
-        target: '#hs-form-container',
-        onFormReady: function(form) {
-          populateAllFields();
-          // Re-populate every 300ms for 3 seconds to catch any re-renders
-          let count = 0;
-          const interval = setInterval(() => {
-            populateAllFields();
-            count++;
-            if (count >= 10) clearInterval(interval);
-          }, 300);
-        },
-        onFormSubmit: function(form) {
-          populateAllFields();
-        },
-        onFormSubmitted: function() {
-          setTimeout(() => showResults(), 800);
-        }
-      });
-    } else if (attempts > 0) {
-      setTimeout(() => waitForHbspt(attempts - 1), 300);
+  window.hbspt.forms.create({
+    region: 'na2',
+    portalId: '245854612',
+    formId: 'ed112fb4-4e03-457f-ae39-5871122cf7d4',
+    target: '#hs-form-container',
+    onFormReady: function() {
+      populateAllFields();
+      let count = 0;
+      const interval = setInterval(() => {
+        populateAllFields();
+        count++;
+        if (count >= 10) clearInterval(interval);
+      }, 300);
+    },
+    onFormSubmit: function() {
+      populateAllFields();
+    },
+    onFormSubmitted: function() {
+      setTimeout(() => showResults(), 800);
     }
+  });
+}
+
+function loadHubSpotForm() {
+  if (window.hbspt && window.hbspt.forms) {
+    createHubSpotForm();
+    return;
+  }
+
+  // Dynamically load the HubSpot script then create form
+  const script = document.createElement('script');
+  script.src = 'https://js-na2.hsforms.net/forms/embed/245854612.js';
+  script.onload = function() {
+    const waitForHbspt = (attempts) => {
+      if (window.hbspt && window.hbspt.forms) {
+        createHubSpotForm();
+      } else if (attempts > 0) {
+        setTimeout(() => waitForHbspt(attempts - 1), 200);
+      }
+    };
+    waitForHbspt(25);
   };
-  waitForHbspt(20);
+  document.head.appendChild(script);
 }
 
 function showGate() {
