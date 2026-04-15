@@ -145,6 +145,31 @@
 
   .btn-restart { background: none; border: none; font-family: 'Libre Baskerville', Georgia, serif; font-size: 0.8rem; color: var(--steel); cursor: pointer; text-decoration: underline; display: block; margin: 0 auto; text-align: center; }
 
+
+  /* Pillar transition screen */
+  .pillar-transition { background: var(--black); border-radius: 10px; padding: 2.5rem 2rem; margin-bottom: 1.5rem; animation: fadeUp 0.3s ease; text-align: center; }
+  .pillar-transition .pt-num { font-size: 0.75rem; color: rgba(245,243,238,0.4); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .pillar-transition .pt-title { font-family: 'League Gothic', 'League Spartan', sans-serif; font-size: 2.5rem; color: var(--off-white); line-height: 1; margin-bottom: 0.75rem; }
+  .pillar-transition .pt-desc { font-size: 0.9rem; color: rgba(245,243,238,0.6); line-height: 1.6; margin-bottom: 1.5rem; }
+  .pillar-transition .pt-pill { display: inline-block; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 12px; border-radius: 20px; margin-bottom: 1.5rem; }
+  .pt-pill-people { background: var(--people-bg); color: var(--people); }
+  .pt-pill-process { background: var(--process-bg); color: var(--process); }
+  .pt-pill-performance { background: var(--perf-bg); color: var(--perf); }
+
+  /* Answer label */
+  .answer-label { font-size: 0.75rem; color: var(--steel); text-align: center; margin-top: 8px; min-height: 18px; transition: opacity 0.2s; font-style: italic; }
+
+  /* Progress encouragement */
+  .progress-encourage { font-size: 0.75rem; color: var(--steel); font-style: italic; text-align: right; margin-top: 4px; min-height: 16px; }
+
+  /* Blurred preview on gate */
+  .gate-preview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1.5rem; }
+  .gate-preview-card { background: var(--off-white); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; text-align: center; }
+  .gate-preview-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--steel); margin-bottom: 4px; }
+  .gate-preview-val { font-family: 'League Gothic', sans-serif; font-size: 1.5rem; color: var(--black); filter: blur(6px); user-select: none; }
+  .gate-preview-bar-track { height: 3px; background: var(--border); border-radius: 2px; margin-top: 6px; }
+  .gate-preview-bar { height: 3px; border-radius: 2px; filter: blur(2px); }
+
   @media (max-width: 480px) {
     h1 { font-size: 1.75rem; }
     .score-big { font-size: 3rem; }
@@ -183,6 +208,7 @@
     <div class="progress-track">
       <div class="progress-fill" id="prog-fill" style="width:0%"></div>
     </div>
+    <div class="progress-encourage" id="prog-encourage"></div>
     <div id="q-container"></div>
     <div class="nav-row">
       <button class="btn-ghost" id="btn-back" onclick="prevQ()" style="visibility:hidden;">Back</button>
@@ -190,11 +216,35 @@
     </div>
   </div>
 
+
+  <!-- Pillar transition screen -->
+  <div id="screen-transition" class="screen">
+    <div id="transition-content"></div>
+    <button class="btn-primary" id="btn-transition" onclick="startPillar()">Begin</button>
+  </div>
+
   <!-- Gate Screen -->
   <div id="screen-gate" class="screen">
     <div class="gate-card">
       <div class="gate-title">Your results are ready.</div>
-      <p class="gate-sub">Enter your name and email to see your personalized Revenue Friction Report — including a breakdown across all three pillars and exactly where to focus first.</p>
+      <p class="gate-sub">Enter your name and email to unlock your personalized Revenue Friction Report.</p>
+      <div class="gate-preview">
+        <div class="gate-preview-card">
+          <div class="gate-preview-label">People</div>
+          <div class="gate-preview-val" id="gate-prev-people">--</div>
+          <div class="gate-preview-bar-track"><div class="gate-preview-bar" id="gate-prev-bar-people" style="background:#AFA9EC;width:0%"></div></div>
+        </div>
+        <div class="gate-preview-card">
+          <div class="gate-preview-label">Process</div>
+          <div class="gate-preview-val" id="gate-prev-process">--</div>
+          <div class="gate-preview-bar-track"><div class="gate-preview-bar" id="gate-prev-bar-process" style="background:#5DCAA5;width:0%"></div></div>
+        </div>
+        <div class="gate-preview-card">
+          <div class="gate-preview-label">Performance</div>
+          <div class="gate-preview-val" id="gate-prev-perf">--</div>
+          <div class="gate-preview-bar-track"><div class="gate-preview-bar" id="gate-prev-bar-perf" style="background:#EF9F27;width:0%"></div></div>
+        </div>
+      </div>
       <div id="custom-gate-form">
         <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
           <input type="text" id="gate-firstname" placeholder="First name" style="flex:1;min-width:140px;">
@@ -325,6 +375,7 @@ function renderQ() {
     <div class="q-text">${q.text}</div>
     <div class="scale-row" id="scale-row"></div>
     <div class="scale-labels"><span>Strongly disagree</span><span>Strongly agree</span></div>
+    <div class="answer-label" id="answer-label"></div>
   `;
   container.appendChild(card);
 
@@ -344,11 +395,44 @@ function selectAnswer(val) {
     b.classList.toggle('selected', i + 1 === val);
   });
   document.getElementById('btn-next').disabled = false;
+  const lbl = document.getElementById('answer-label');
+  if (lbl) lbl.textContent = answerLabels[val - 1];
 }
 
 function nextQ() {
-  if (current < 23) { current++; renderQ(); }
-  else showGate();
+  if (current < 23) {
+    current++;
+    // Show pillar transition at Q9 (Process) and Q17 (Performance)
+    if (current === 8) {
+      showTransition('process');
+    } else if (current === 16) {
+      showTransition('performance');
+    } else {
+      renderQ();
+    }
+  } else {
+    showGate();
+  }
+}
+
+function showTransition(pillar) {
+  pendingPillar = pillar;
+  const t = pillarTransitions[pillar];
+  document.getElementById('transition-content').innerHTML = \`
+    <div class="pillar-transition">
+      <div class="pt-num">\${t.num}</div>
+      <div class="pt-title">\${t.title}</div>
+      <span class="pt-pill \${t.pill}">\${t.title}</span>
+      <div class="pt-desc">\${t.desc}</div>
+    </div>
+  \`;
+  show('screen-transition');
+}
+
+function startPillar() {
+  pendingPillar = null;
+  show('screen-questions');
+  renderQ();
 }
 
 function prevQ() {
@@ -367,6 +451,24 @@ function showGate() {
   scores.process = answers.slice(8, 16).reduce((a, b) => a + b, 0);
   scores.performance = answers.slice(16, 24).reduce((a, b) => a + b, 0);
   scores.total = scores.people + scores.process + scores.performance;
+
+  // Populate blurred preview
+  const pp = document.getElementById('gate-prev-people');
+  const ppr = document.getElementById('gate-prev-process');
+  const ppf = document.getElementById('gate-prev-perf');
+  if (pp) pp.textContent = scores.people;
+  if (ppr) ppr.textContent = scores.process;
+  if (ppf) ppf.textContent = scores.performance;
+
+  const barp = document.getElementById('gate-prev-bar-people');
+  const barpr = document.getElementById('gate-prev-bar-process');
+  const barpf = document.getElementById('gate-prev-bar-perf');
+  setTimeout(() => {
+    if (barp) barp.style.width = Math.round((scores.people / 40) * 100) + '%';
+    if (barpr) barpr.style.width = Math.round((scores.process / 40) * 100) + '%';
+    if (barpf) barpf.style.width = Math.round((scores.performance / 40) * 100) + '%';
+  }, 200);
+
   show('screen-gate');
 }
 
