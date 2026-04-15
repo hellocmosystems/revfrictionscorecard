@@ -352,6 +352,39 @@ function startAssessment() {
   renderQ();
 }
 
+const answerLabels = ['Strongly disagree', 'Mostly disagree', 'Neutral', 'Mostly agree', 'Strongly agree'];
+
+const encouragements = [
+  '','','','','',
+  'Solid start. Keep going.',
+  '','',
+  '',
+  'One third complete.',
+  '','','',
+  'Halfway there. The clearer your answers, the sharper your results.',
+  '','','',
+  'Final section. These questions reveal where revenue converts — or doesn\'t.',
+  '','','','','',
+  'Last question.'
+];
+
+const pillarTransitions = {
+  process: {
+    num: 'Pillar 2 of 3',
+    title: 'Process',
+    pill: 'pt-pill-process',
+    desc: 'How revenue flows through your business — handoffs, pipeline clarity, and execution consistency.'
+  },
+  performance: {
+    num: 'Pillar 3 of 3',
+    title: 'Performance',
+    pill: 'pt-pill-performance',
+    desc: 'Demand quality, messaging, and whether your efforts are converting into revenue.'
+  }
+};
+
+let pendingPillar = null;
+
 function renderQ() {
   const q = questions[current];
   const pct = Math.round((current / 24) * 100);
@@ -362,6 +395,9 @@ function renderQ() {
   const btnNext = document.getElementById('btn-next');
   btnNext.disabled = answers[current] === null;
   btnNext.textContent = current === 23 ? 'Get my results' : 'Next';
+
+  const encourage = document.getElementById('prog-encourage');
+  if (encourage) encourage.textContent = encouragements[current] || '';
 
   const meta = pillarMeta[q.pillar];
   const container = document.getElementById('q-container');
@@ -386,6 +422,11 @@ function renderQ() {
     btn.textContent = i;
     btn.onclick = () => selectAnswer(i);
     row.appendChild(btn);
+  }
+
+  if (answers[current] !== null) {
+    const lbl = document.getElementById('answer-label');
+    if (lbl) lbl.textContent = answerLabels[answers[current] - 1];
   }
 }
 
@@ -418,14 +459,14 @@ function nextQ() {
 function showTransition(pillar) {
   pendingPillar = pillar;
   const t = pillarTransitions[pillar];
-  document.getElementById('transition-content').innerHTML = \`
+  document.getElementById('transition-content').innerHTML = `
     <div class="pillar-transition">
-      <div class="pt-num">\${t.num}</div>
-      <div class="pt-title">\${t.title}</div>
-      <span class="pt-pill \${t.pill}">\${t.title}</span>
-      <div class="pt-desc">\${t.desc}</div>
+      <div class="pt-num">${t.num}</div>
+      <div class="pt-title">${t.title}</div>
+      <span class="pt-pill ${t.pill}">${t.title}</span>
+      <div class="pt-desc">${t.desc}</div>
     </div>
-  \`;
+  `;
   show('screen-transition');
 }
 
