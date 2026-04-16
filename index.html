@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Revenue Friction Scorecard — CMO Systems</title>
+<title>Revenue Friction Scorecard | CMO Systems</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700&family=League+Gothic&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 
@@ -294,7 +294,7 @@
     <div class="cta-block">
       <h2>Ready to fix it?</h2>
       <p>CMO Systems works with growth-stage and mid-market companies to eliminate revenue friction across People, Process, and Performance. Let's talk about what this looks like for your business.</p>
-      <a class="btn-cta" href="mailto:hello.cmosystems@gmail.com?subject=Revenue Friction Scorecard — Let's Talk">Book a conversation</a>
+      <a class="btn-cta" href="mailto:hello.cmosystems@gmail.com?subject=Revenue Friction Scorecard: Let's Talk">Book a conversation</a>
       <p class="cta-contact">hello.cmosystems@gmail.com &nbsp;·&nbsp; 1.312.489.1607</p>
     </div>
 
@@ -309,25 +309,25 @@ const questions = [
   { pillar: 'people', text: 'Sales and marketing operate from a shared definition of a qualified lead.' },
   { pillar: 'people', text: 'Our team understands how their individual work connects to revenue outcomes.' },
   { pillar: 'people', text: 'When a deal stalls or falls through, we have a clear process to diagnose why.' },
-  { pillar: 'people', text: 'Cross-functional teams — sales, marketing, ops — collaborate without significant friction or blame.' },
+  { pillar: 'people', text: 'Cross-functional teams (sales, marketing, ops) collaborate without significant friction or blame.' },
   { pillar: 'people', text: 'New hires understand their role in the revenue process within their first 30 days.' },
   { pillar: 'people', text: 'Leadership has visibility into team performance at each stage of the revenue funnel.' },
   { pillar: 'people', text: 'Accountability for missed targets is handled consistently and constructively.' },
   { pillar: 'process', text: 'We have a documented, repeatable sales process that the team consistently follows.' },
-  { pillar: 'process', text: 'Our pipeline stages reflect how buyers actually make decisions — not just how we want to sell.' },
+  { pillar: 'process', text: 'Our pipeline stages reflect how buyers actually make decisions, not just how we want to sell.' },
   { pillar: 'process', text: 'We can reliably forecast revenue 60 to 90 days out.' },
   { pillar: 'process', text: 'Marketing handoffs to sales are smooth and rarely result in dropped or ignored leads.' },
-  { pillar: 'process', text: 'Our CRM or pipeline tool reflects reality — not just what reps hope will close.' },
+  { pillar: 'process', text: 'Our CRM or pipeline tool reflects reality, not just what reps hope will close.' },
   { pillar: 'process', text: 'We have defined response times for how quickly leads are followed up on after entering the funnel.' },
   { pillar: 'process', text: 'Our onboarding process for new clients is consistent and sets the right expectations.' },
-  { pillar: 'process', text: 'We regularly review and improve our revenue processes — not just react to problems.' },
-  { pillar: 'performance', text: 'Our messaging clearly articulates why we are the right choice — not just what we do.' },
+  { pillar: 'process', text: 'We regularly review and improve our revenue processes, not just react to problems.' },
+  { pillar: 'performance', text: 'Our messaging clearly articulates why we are the right choice, not just what we do.' },
   { pillar: 'performance', text: 'The leads we generate consistently match our ideal customer profile.' },
   { pillar: 'performance', text: 'Our conversion rate from qualified lead to closed won has improved or held steady over the last 6 months.' },
   { pillar: 'performance', text: 'We know our customer acquisition cost and have a plan to improve it.' },
   { pillar: 'performance', text: 'Our sales team has the content and tools they need to move buyers through the funnel confidently.' },
-  { pillar: 'performance', text: 'We track performance at each funnel stage — not just top-line revenue.' },
-  { pillar: 'performance', text: 'Our marketing channels are producing measurable pipeline contribution — not just awareness.' },
+  { pillar: 'performance', text: 'We track performance at each funnel stage, not just top-line revenue.' },
+  { pillar: 'performance', text: 'Our marketing channels are producing measurable pipeline contribution, not just awareness.' },
   { pillar: 'performance', text: 'We have a retention and expansion strategy that contributes meaningfully to revenue.' }
 ];
 
@@ -363,7 +363,7 @@ const encouragements = [
   '','','',
   'Halfway there. The clearer your answers, the sharper your results.',
   '','','',
-  'Final section. These questions reveal where revenue converts — or doesn\'t.',
+  'Final section. These questions reveal where revenue converts or doesn\'t.',
   '','','','','',
   'Last question.'
 ];
@@ -373,7 +373,7 @@ const pillarTransitions = {
     num: 'Pillar 2 of 3',
     title: 'Process',
     pill: 'pt-pill-process',
-    desc: 'How revenue flows through your business — handoffs, pipeline clarity, and execution consistency.'
+    desc: 'How revenue flows through your business: handoffs, pipeline clarity, and execution consistency.'
   },
   performance: {
     num: 'Pillar 3 of 3',
@@ -580,7 +580,7 @@ function showResults() {
   let tier, badgeClass, desc;
   if (scores.total >= 96) {
     tier = 'Optimized'; badgeClass = 'tier-optimized';
-    desc = 'Your systems are working. The focus now is scale and velocity — not fixing broken foundations. There may still be pockets of friction worth addressing as you grow.';
+    desc = 'Your systems are working. The focus now is scale and velocity, not fixing broken foundations. There may still be pockets of friction worth addressing as you grow.';
   } else if (scores.total >= 72) {
     tier = 'Friction present'; badgeClass = 'tier-friction';
     desc = 'You have real execution gaps. Growth is possible but inconsistent. Alignment work across your weakest pillar will unlock meaningful upside in the next 90 days.';
@@ -627,7 +627,7 @@ function showResults() {
     const finding = map.find(f => p.score <= f.max) || map[map.length - 1];
     const item = document.createElement('div');
     item.className = 'finding-item';
-    item.innerHTML = '<span class="finding-pillar">' + p.name + ' — ' + p.score + ' / 40</span>' + finding.text;
+    item.innerHTML = '<span class="finding-pillar">' + p.name + ': ' + p.score + ' / 40</span>' + finding.text;
     findingsList.appendChild(item);
   });
 
