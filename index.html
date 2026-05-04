@@ -409,6 +409,8 @@ input::placeholder { color: #AAA; }
   .cta-block-buttons { flex-direction: column; }
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init("NONjIPPSjaL5Wiap-");</script>
 </head>
 <body>
 
@@ -471,45 +473,6 @@ input::placeholder { color: #AAA; }
     <button class="btn-primary-dark" id="btn-transition" onclick="startPillar()">Begin this section</button>
   </div>
 
-  <!-- GATE -->
-  <div id="screen-gate" class="screen">
-    <div class="gate-wrap">
-      <div class="section-eyebrow" style="margin-top:2rem;"><span>Your results are ready</span></div>
-      <h2 class="gate-headline">A diagnosis
-        <span class="gate-headline-italic">before a prescription.</span>
-      </h2>
-      <p class="gate-sub">Enter your name and email to unlock your personalized Revenue Friction Report — including a breakdown across all three pillars and exactly where to focus first.</p>
-      <div class="gate-preview">
-        <div class="gate-preview-card">
-          <div class="gate-preview-label">People</div>
-          <div class="gate-preview-val" id="gate-prev-people">--</div>
-          <div class="gate-preview-bar-track"><div class="gate-preview-bar" id="gate-prev-bar-people" style="background:#C94A1E;width:0%"></div></div>
-        </div>
-        <div class="gate-preview-card">
-          <div class="gate-preview-label">Process</div>
-          <div class="gate-preview-val" id="gate-prev-process">--</div>
-          <div class="gate-preview-bar-track"><div class="gate-preview-bar" id="gate-prev-bar-process" style="background:#C94A1E;width:0%"></div></div>
-        </div>
-        <div class="gate-preview-card">
-          <div class="gate-preview-label">Performance</div>
-          <div class="gate-preview-val" id="gate-prev-perf">--</div>
-          <div class="gate-preview-bar-track"><div class="gate-preview-bar" id="gate-prev-bar-perf" style="background:#C94A1E;width:0%"></div></div>
-        </div>
-      </div>
-      <div class="gate-form">
-        <div class="form-row">
-          <input type="text" id="gate-firstname" placeholder="First name">
-          <input type="text" id="gate-lastname" placeholder="Last name">
-        </div>
-        <input type="email" id="gate-email" placeholder="Email address">
-        <div class="gate-error" id="gate-error">Please enter a valid email address.</div>
-        <button class="btn-primary" id="gate-submit" onclick="submitGate()">Unlock my results</button>
-      </div>
-      <div id="gate-submitting" style="display:none;text-align:center;padding:1rem 0;font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--steel);">Sending your results...</div>
-      <p class="gate-privacy">Your information is kept private and will never be sold. CMO Systems may follow up with relevant insights based on your results.</p>
-    </div>
-  </div>
-
   <!-- RESULTS -->
   <div id="screen-results" class="screen">
     <div class="results-wrap">
@@ -547,10 +510,34 @@ input::placeholder { color: #AAA; }
         <h2>Ready to fix it.<em>Let's align the system.</em></h2>
         <p>CMO Systems works with growth-stage and mid-market companies to eliminate revenue friction across People, Process, and Performance. Let's talk about what this looks like for your business.</p>
         <div class="cta-block-buttons">
-          <a class="btn-primary-inv" href="mailto:hello.cmosystems@gmail.com?subject=Revenue Friction Scorecard: Let's Talk">Book a conversation</a>
+          <a class="btn-primary-inv" href="mailto:hello@cmosystems.co?subject=Revenue Friction Scorecard: Let's Talk">Book a conversation</a>
           <a class="btn-ghost-inv" href="https://cmosystems.co" target="_blank">See the program</a>
         </div>
-        <p class="cta-contact">hello.cmosystems@gmail.com &nbsp;·&nbsp; 1.312.489.1607</p>
+        <p class="cta-contact">hello@cmosystems.co &nbsp;·&nbsp; 1.312.489.1607</p>
+      </div>
+
+      <!-- EMAIL CAPTURE -->
+      <div class="email-capture-wrap" id="email-capture-wrap">
+        <div class="section-eyebrow" style="margin-top:2rem;"><span>Keep your results</span></div>
+        <h3 class="email-capture-headline">Want these results<span class="email-capture-italic"> sent to your inbox?</span></h3>
+        <p class="email-capture-sub">Enter your email and we'll send you a copy of your Revenue Friction Report to reference later.</p>
+        <div class="email-capture-form" id="email-capture-form">
+          <div class="email-form-row">
+            <input type="text" id="cap-firstname" placeholder="First name">
+            <input type="text" id="cap-lastname" placeholder="Last name">
+          </div>
+          <input type="email" id="cap-email" placeholder="Email address">
+          <div class="email-capture-error" id="cap-error">Please enter a valid email address.</div>
+          <button class="btn-primary" onclick="sendResults()">Send me my results</button>
+        </div>
+        <div id="cap-sending" style="display:none;text-align:center;padding:1rem 0;font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--steel);">Sending your results...</div>
+        <div id="cap-success" style="display:none;">
+          <div class="email-success-box">
+            <div class="email-success-icon">✓</div>
+            <p class="email-success-text">Your results are on their way. Check your inbox.</p>
+          </div>
+        </div>
+        <p class="gate-privacy" style="margin-top:1rem;">Your information is kept private and will never be sold. CMO Systems may follow up with relevant insights based on your results.</p>
       </div>
 
       <button class="btn-restart" onclick="restart()">Start over</button>
@@ -759,78 +746,10 @@ function showGate() {
   scores.process = answers.slice(8, 16).reduce((a, b) => a + b, 0);
   scores.performance = answers.slice(16, 24).reduce((a, b) => a + b, 0);
   scores.total = scores.people + scores.process + scores.performance;
-
-  // Populate blurred preview
-  const pp = document.getElementById('gate-prev-people');
-  const ppr = document.getElementById('gate-prev-process');
-  const ppf = document.getElementById('gate-prev-perf');
-  if (pp) pp.textContent = scores.people;
-  if (ppr) ppr.textContent = scores.process;
-  if (ppf) ppf.textContent = scores.performance;
-
-  const barp = document.getElementById('gate-prev-bar-people');
-  const barpr = document.getElementById('gate-prev-bar-process');
-  const barpf = document.getElementById('gate-prev-bar-perf');
-  setTimeout(() => {
-    if (barp) barp.style.width = Math.round((scores.people / 40) * 100) + '%';
-    if (barpr) barpr.style.width = Math.round((scores.process / 40) * 100) + '%';
-    if (barpf) barpf.style.width = Math.round((scores.performance / 40) * 100) + '%';
-  }, 200);
-
-  show('screen-gate');
+  showResults();
 }
 
-function submitGate() {
-  const firstname = document.getElementById('gate-firstname').value.trim();
-  const lastname = document.getElementById('gate-lastname').value.trim();
-  const email = document.getElementById('gate-email').value.trim();
-  const errorEl = document.getElementById('gate-error');
 
-  if (!email || !email.includes('@')) {
-    errorEl.style.display = 'block';
-    return;
-  }
-  errorEl.style.display = 'none';
-
-  document.getElementById('custom-gate-form').style.display = 'none';
-  document.getElementById('gate-submitting').style.display = 'block';
-
-  const portalId = '245854612';
-  const formId = 'ed112fb4-4e03-457f-ae39-5871122cf7d4';
-  const url = `https://api.hsforms.com/submissions/v3/integration/submit/${portalId}/${formId}`;
-
-  const payload = {
-    fields: [
-      { name: 'firstname', value: firstname },
-      { name: 'lastname', value: lastname },
-      { name: 'email', value: email },
-      { name: 'friction_score', value: String(scores.total) },
-      { name: 'friction_tier', value: getTier(scores.total) },
-      { name: 'people_score', value: String(scores.people) },
-      { name: 'process_score', value: String(scores.process) },
-      { name: 'performance_score', value: String(scores.performance) }
-    ],
-    context: {
-      pageUri: window.location.href,
-      pageName: 'Revenue Friction Scorecard'
-    }
-  };
-
-  fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  })
-  .then(res => res.json().then(data => {
-    console.log('HubSpot response status:', res.status);
-    console.log('HubSpot response body:', JSON.stringify(data));
-    showResults();
-  }))
-  .catch(err => {
-    console.error('HubSpot submission error:', err);
-    showResults();
-  });
-}
 
 function showResults() {
   document.getElementById('res-score').textContent = scores.total;
@@ -901,10 +820,78 @@ function showResults() {
   show('screen-results');
 }
 
+function getTierMessage(total) {
+  if (total >= 96) return 'Your systems are working. The focus now is scale and velocity, not fixing broken foundations. There may still be pockets of friction worth addressing as you grow.';
+  if (total >= 72) return 'You have real execution gaps. Growth is possible but inconsistent. Alignment work across your weakest pillar will unlock meaningful upside in the next 90 days.';
+  if (total >= 48) return 'Your revenue engine has structural problems. Without addressing the root causes across People, Process, or Performance, growth will stay stuck regardless of how much you spend on demand generation.';
+  return 'Misalignment is actively costing you money. This needs immediate attention across all three pillars. The good news: the path forward is clear and fixable.';
+}
+
+function sendResults() {
+  const firstname = document.getElementById('cap-firstname').value.trim();
+  const lastname = document.getElementById('cap-lastname').value.trim();
+  const email = document.getElementById('cap-email').value.trim();
+  const errorEl = document.getElementById('cap-error');
+
+  if (!email || !email.includes('@')) {
+    errorEl.style.display = 'block';
+    return;
+  }
+  errorEl.style.display = 'none';
+
+  document.getElementById('email-capture-form').style.display = 'none';
+  document.getElementById('cap-sending').style.display = 'block';
+
+  const fullName = (firstname + ' ' + lastname).trim() || 'there';
+  const tier = getTier(scores.total);
+  const tierMessage = getTierMessage(scores.total);
+
+  const params = {
+    to_name: fullName,
+    to_email: email,
+    total_score: String(scores.total),
+    friction_tier: tier,
+    people_score: String(scores.people),
+    process_score: String(scores.process),
+    performance_score: String(scores.performance),
+    tier_message: tierMessage
+  };
+
+  // Send results email to user
+  emailjs.send('service_zguvabm', 'template_dt94tfd', params)
+    .then(() => {
+      document.getElementById('cap-sending').style.display = 'none';
+      document.getElementById('cap-success').style.display = 'block';
+    })
+    .catch(() => {
+      document.getElementById('cap-sending').style.display = 'none';
+      document.getElementById('cap-success').style.display = 'block';
+    });
+
+  // Send notification to Ryan
+  emailjs.send('service_zguvabm', 'template_n6lkgyh', params)
+    .catch(err => console.log('Notify error:', err));
+}
+
 function restart() {
   current = 0;
   answers = new Array(24).fill(null);
   scores = {};
+  // Reset email capture form
+  const form = document.getElementById('email-capture-form');
+  const sending = document.getElementById('cap-sending');
+  const success = document.getElementById('cap-success');
+  const error = document.getElementById('cap-error');
+  const fn = document.getElementById('cap-firstname');
+  const ln = document.getElementById('cap-lastname');
+  const em = document.getElementById('cap-email');
+  if (form) form.style.display = 'block';
+  if (sending) sending.style.display = 'none';
+  if (success) success.style.display = 'none';
+  if (error) error.style.display = 'none';
+  if (fn) fn.value = '';
+  if (ln) ln.value = '';
+  if (em) em.value = '';
   show('screen-intro');
 }
 </script>
