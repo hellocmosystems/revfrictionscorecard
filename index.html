@@ -846,6 +846,23 @@ function sendResults() {
   const tier = getTier(scores.total);
   const tierMessage = getTierMessage(scores.total);
 
+  // Build bottom 5 lowest scoring questions
+  const pillarLabels = { people: 'People', process: 'Process', performance: 'Performance' };
+  const scoreLabels = ['', 'Strongly disagree', 'Mostly disagree', 'Neutral', 'Mostly agree', 'Strongly agree'];
+
+  const scored = questions.map((q, i) => ({
+    pillar: pillarLabels[q.pillar],
+    text: q.text,
+    score: answers[i]
+  }));
+
+  // Sort by score ascending, take bottom 5
+  const bottom5 = [...scored].sort((a, b) => a.score - b.score).slice(0, 5);
+
+  const bottom5Text = bottom5.map((item, idx) =>
+    (idx + 1) + '. [' + item.pillar + '] ' + item.text + '\n   Your answer: ' + item.score + '/5 — ' + scoreLabels[item.score]
+  ).join('\n\n');
+
   const params = {
     to_name: fullName,
     to_email: email,
@@ -854,7 +871,8 @@ function sendResults() {
     people_score: String(scores.people),
     process_score: String(scores.process),
     performance_score: String(scores.performance),
-    tier_message: tierMessage
+    tier_message: tierMessage,
+    bottom_5: bottom5Text
   };
 
   // Send results email to user
